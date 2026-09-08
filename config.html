@@ -6,8 +6,8 @@
   <title>Quick Agenda — Configure</title>
   <script src="https://res.cdn.office.net/teams-js/2.24.0/js/MicrosoftTeams.min.js"></script>
   <style>
-    :root { --bg:#fff; --fg:#242424; --muted:#616161; --card:#f5f5f5; --border:#e0e0e0; --accent:#8A2BE2; --code-bg:#efe7fb; }
-    html[data-theme="dark"], html[data-theme="contrast"] { --bg:#1f1f1f; --fg:#fff; --muted:#adadad; --card:#2d2d2d; --border:#3d3d3d; --accent:#b388ff; --code-bg:#3a2f4d; }
+    :root { --bg:#fff; --fg:#242424; --muted:#616161; --card:#f5f5f5; --border:#e0e0e0; --accent:#8A2BE2; }
+    html[data-theme="dark"], html[data-theme="contrast"] { --bg:#1f1f1f; --fg:#fff; --muted:#adadad; --card:#2d2d2d; --border:#3d3d3d; --accent:#b388ff; }
     * { box-sizing: border-box; }
     body { margin:0; padding:14px; font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--fg); font-size:14px; line-height:1.45; }
     .title { margin:0 0 6px; font-size:16px; font-weight:600; }
@@ -15,42 +15,33 @@
     label { display:block; font-weight:600; margin:12px 0 4px; }
     input { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--fg); font-size:14px; }
     .muted { color:var(--muted); font-size:12px; margin-top:6px; }
-    .hint-id { font-family:ui-monospace,monospace; background:var(--code-bg); padding:1px 5px; border-radius:4px; cursor:pointer; }
   </style>
 </head>
 <body>
   <h2 class="title">📋 Quick Agenda</h2>
-  <p>Enter the meeting's agenda ID so this panel shows the live agenda for this meeting. Leave blank to show the demo.</p>
+  <p>Enter the meeting's <b>numeric Meeting ID</b> (from the invite / “Meeting ID”) so this panel shows the live agenda. Leave blank to show the demo.</p>
 
-  <label for="mid">Agenda meeting ID</label>
-  <input id="mid" type="text" placeholder="e.g. 317161927389394" autocomplete="off" />
-  <p class="muted" id="detected"></p>
-  <p class="muted">Then click <b>Save</b>. Invite <b>hack-g4-bot@meetings.quick.aws.dev</b> and start live transcription so the agenda updates.</p>
+  <label for="mid">Meeting ID (numeric)</label>
+  <input id="mid" type="text" inputmode="numeric" placeholder="e.g. 317 161 927 394" autocomplete="off" />
+  <p class="muted">Then click <b>Save</b>. Invite <b>hack-g4-bot@meetings.quick.aws.dev</b> and start live transcription so the agenda fills in.</p>
 
   <script>
     var BASE = "https://djhog3mmjjbr1.cloudfront.net/live/";
     var midEl = document.getElementById("mid");
-    var detectedEl = document.getElementById("detected");
 
     function applyTheme(t){ document.documentElement.setAttribute("data-theme", t === "default" ? "light" : t); }
 
-    // Build the content URL: per-meeting ?src when an id is given, else the demo base.
+    // Per-meeting content URL from the numeric id (spaces/dashes stripped). Blank => demo base.
     function buildContentUrl() {
-      var id = (midEl.value || "").trim();
+      var id = (midEl.value || "").replace(/[^0-9]/g, "");
       if (!id) return BASE;
-      return BASE + "?src=/live/" + encodeURIComponent(id) + ".json";
+      return BASE + "?src=/live/" + id + ".json";
     }
 
     if (window.microsoftTeams) {
       microsoftTeams.app.initialize().then(function () {
         microsoftTeams.app.getContext().then(function (ctx) {
           applyTheme((ctx && ctx.app && ctx.app.theme) || "default");
-          // Best-effort prefill from the Teams meeting id (NOTE: may differ from the
-          // summarizer's meetingId — overwrite this field with the summarizer id if so).
-          var tid = (ctx && ctx.meeting && ctx.meeting.id) || (ctx && ctx.chat && ctx.chat.id) || "";
-          if (tid) {
-            detectedEl.innerHTML = 'Teams meeting id: <span class="hint-id" title="click to use" onclick="document.getElementById(\'mid\').value=this.textContent">' + tid + '</span>';
-          }
         }).catch(function(){});
         microsoftTeams.app.registerOnThemeChangeHandler(applyTheme);
 
