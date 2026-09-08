@@ -6,111 +6,47 @@
   <title>Quick Agenda — Configure</title>
   <script src="https://res.cdn.office.net/teams-js/2.24.0/js/MicrosoftTeams.min.js"></script>
   <style>
-    :root {
-      --bg: #ffffff; --fg: #242424; --muted: #616161;
-      --card: #f5f5f5; --border: #e0e0e0; --accent: #8A2BE2; --accent-fg: #ffffff;
-      --code-bg: #efe7fb;
-    }
-    html[data-theme="dark"], html[data-theme="contrast"] {
-      --bg: #1f1f1f; --fg: #ffffff; --muted: #adadad;
-      --card: #2d2d2d; --border: #3d3d3d; --accent: #b388ff; --accent-fg: #1f1f1f;
-      --code-bg: #3a2f4d;
-    }
+    :root { --bg:#fff; --fg:#242424; --muted:#616161; --card:#f5f5f5; --border:#e0e0e0; --accent:#8A2BE2; --code-bg:#efe7fb; }
+    html[data-theme="dark"], html[data-theme="contrast"] { --bg:#1f1f1f; --fg:#fff; --muted:#adadad; --card:#2d2d2d; --border:#3d3d3d; --accent:#b388ff; --code-bg:#3a2f4d; }
     * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 16px;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg); color: var(--fg);
-      font-size: 14px; line-height: 1.5;
-    }
-    .title { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 18px; font-weight: 600; }
-    .sub { color: var(--muted); margin: 0 0 16px; }
-    .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
-    .steps > li {
-      position: relative; background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px 12px 12px 44px; margin-bottom: 10px;
-    }
-    .steps > li::before {
-      counter-increment: step; content: counter(step);
-      position: absolute; left: 12px; top: 12px;
-      width: 22px; height: 22px; border-radius: 50%;
-      background: var(--accent); color: var(--accent-fg);
-      font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
-    }
-    .steps b { font-weight: 600; }
-    .email-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-    code.email {
-      background: var(--code-bg); color: var(--fg);
-      padding: 4px 8px; border-radius: 6px; font-size: 13px; word-break: break-all;
-    }
-    button.copy {
-      border: 1px solid var(--border); background: transparent; color: var(--accent);
-      border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;
-    }
-    button.copy:hover { background: var(--card); }
-    .note { color: var(--muted); font-size: 12.5px; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
-    .save-hint { color: var(--accent); font-weight: 600; }
+    body { margin:0; padding:14px; font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--fg); font-size:14px; line-height:1.45; }
+    .title { margin:0 0 6px; font-size:16px; font-weight:600; }
+    p { margin:0 0 10px; }
+    .muted { color:var(--muted); font-size:12.5px; }
+    .email-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:8px 0; }
+    code.email { background:var(--code-bg); padding:4px 8px; border-radius:6px; font-size:13px; word-break:break-all; }
+    button.copy { border:1px solid var(--border); background:transparent; color:var(--accent); border-radius:6px; padding:3px 9px; font-size:12px; cursor:pointer; }
+    button.copy:hover { background:var(--card); }
   </style>
 </head>
 <body>
   <h2 class="title">📋 Quick Agenda</h2>
-  <p class="sub">Live, synced meeting agenda for everyone in this meeting.</p>
-
-  <ol class="steps">
-    <li>
-      <b>Invite the Quick agenda bot</b> to your meeting so it can join and listen.
-      <div class="email-row">
-        <code class="email" id="botEmail">hack-g4-bot@meetings.quick.aws.dev</code>
-        <button class="copy" onclick="copyEmail()">Copy</button>
-      </div>
-    </li>
-    <li>
-      <b>Turn on live transcription.</b> In the meeting: <b>More (…) → Record and transcribe → Start transcription</b>.
-      The agenda updates from the live transcript.
-    </li>
-    <li>
-      <b>Put the agenda in the invite.</b> Write your agenda in the meeting invitation description — it's parsed into a task breakdown automatically.
-    </li>
-    <li>
-      <b>Watch it here.</b> As the meeting runs, agenda items and their progress appear live in this panel for all participants.
-    </li>
-  </ol>
-
-  <p class="note"><span class="save-hint">Click Save</span> to pin Quick Agenda to the meeting side panel.</p>
+  <p>Invite our bot and start live transcription — the agenda then tracks live here for everyone.</p>
+  <div class="email-row">
+    <code class="email" id="botEmail">hack-g4-bot@meetings.quick.aws.dev</code>
+    <button class="copy" onclick="copyEmail()">Copy</button>
+  </div>
+  <p class="muted">Then: <b>More (…) → Record and transcribe → Start transcription</b>. Click <b>Save</b> to add.</p>
 
   <script>
     var CONTENT_URL = location.origin + location.pathname.replace(/config\.html$/, "content.html");
-
-    function applyTheme(theme) {
-      document.documentElement.setAttribute("data-theme", theme === "default" ? "light" : theme);
-    }
-    function copyEmail() {
+    function applyTheme(t){ document.documentElement.setAttribute("data-theme", t === "default" ? "light" : t); }
+    function copyEmail(){
       var t = document.getElementById("botEmail").textContent.trim();
       navigator.clipboard && navigator.clipboard.writeText(t);
-      var b = document.querySelector("button.copy");
-      if (b) { var o = b.textContent; b.textContent = "Copied!"; setTimeout(function(){ b.textContent = o; }, 1500); }
+      var b = document.querySelector("button.copy"); if(b){ var o=b.textContent; b.textContent="Copied!"; setTimeout(function(){ b.textContent=o; },1500); }
     }
-
     if (window.microsoftTeams) {
       microsoftTeams.app.initialize().then(function () {
-        // Theme (light/dark/contrast) + live switching
-        microsoftTeams.app.getContext().then(function (ctx) {
-          applyTheme((ctx && ctx.app && ctx.app.theme) || "default");
-        }).catch(function () {});
+        microsoftTeams.app.getContext().then(function (c){ applyTheme((c&&c.app&&c.app.theme)||"default"); }).catch(function(){});
         microsoftTeams.app.registerOnThemeChangeHandler(applyTheme);
-
-        // Config: register what gets pinned, then enable Save
-        microsoftTeams.pages.config.registerOnSaveHandler(function (saveEvent) {
+        microsoftTeams.pages.config.registerOnSaveHandler(function (e) {
           microsoftTeams.pages.config.setConfig({
-            entityId: "quickAgenda",
-            contentUrl: CONTENT_URL,
-            websiteUrl: CONTENT_URL,
-            suggestedDisplayName: "Quick Agenda"
-          }).then(function () { saveEvent.notifySuccess(); })
-            .catch(function (e) { saveEvent.notifyFailure(String(e)); });
+            entityId: "quickAgenda", contentUrl: CONTENT_URL, websiteUrl: CONTENT_URL, suggestedDisplayName: "Quick Agenda"
+          }).then(function(){ e.notifySuccess(); }).catch(function(err){ e.notifyFailure(String(err)); });
         });
         microsoftTeams.pages.config.setValidityState(true);
-      }).catch(function () { /* not in Teams — page still renders as static instructions */ });
+      }).catch(function(){});
     }
   </script>
 </body>
