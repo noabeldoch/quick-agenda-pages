@@ -1,28 +1,99 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quick Agenda</title>
-  <script src="https://unpkg.com/@microsoft/teams-js@2/dist/MicrosoftTeams.min.js"></script>
+  <script src="https://res.cdn.office.net/teams-js/2.24.0/js/MicrosoftTeams.min.js"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 12px; }
-    h2 { margin: 0 0 8px; font-size: 16px; }
-    li { margin: 6px 0; }
-    iframe { border: 0; width: 100%; height: 100vh; }
+    :root {
+      --bg: #ffffff; --fg: #242424; --muted: #616161;
+      --card: #f5f5f5; --border: #e0e0e0; --accent: #8A2BE2; --accent-fg: #ffffff;
+      --code-bg: #efe7fb;
+    }
+    html[data-theme="dark"], html[data-theme="contrast"] {
+      --bg: #1f1f1f; --fg: #ffffff; --muted: #adadad;
+      --card: #2d2d2d; --border: #3d3d3d; --accent: #b388ff; --accent-fg: #1f1f1f;
+      --code-bg: #3a2f4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 16px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--fg);
+      font-size: 14px; line-height: 1.5;
+    }
+    .title { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+    .sub { color: var(--muted); margin: 0 0 16px; }
+    .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+    .steps > li {
+      position: relative; background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 12px 12px 44px; margin-bottom: 10px;
+    }
+    .steps > li::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 12px; top: 12px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); color: var(--accent-fg);
+      font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .steps b { font-weight: 600; }
+    .email-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    code.email {
+      background: var(--code-bg); color: var(--fg);
+      padding: 4px 8px; border-radius: 6px; font-size: 13px; word-break: break-all;
+    }
+    button.copy {
+      border: 1px solid var(--border); background: transparent; color: var(--accent);
+      border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+    }
+    button.copy:hover { background: var(--card); }
+    .note { color: var(--muted); font-size: 12.5px; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
   </style>
 </head>
 <body>
-  <div id="app">
-    <h2>📋 Quick Agenda</h2>
-    <ul id="agenda"><li>Waiting for agenda…</li></ul>
-  </div>
+  <h2 class="title">📋 Quick Agenda</h2>
+  <p class="sub">Live, synced meeting agenda for everyone in this meeting.</p>
+
+  <ol class="steps">
+    <li>
+      <b>Invite the Quick agenda bot</b> to your meeting so it can join and listen.
+      <div class="email-row">
+        <code class="email" id="botEmail">hack-g4-bot@meetings.quick.aws.dev</code>
+        <button class="copy" onclick="copyEmail()">Copy</button>
+      </div>
+    </li>
+    <li>
+      <b>Turn on live transcription.</b> In the meeting: <b>More (…) → Record and transcribe → Start transcription</b>.
+      The agenda updates from the live transcript.
+    </li>
+    <li>
+      <b>Put the agenda in the invite.</b> Write your agenda in the meeting invitation description — it's parsed into a task breakdown automatically.
+    </li>
+    <li>
+      <b>Watch it here.</b> As the meeting runs, agenda items and their progress appear live in this panel for all participants.
+    </li>
+  </ol>
+
+  <p class="note">Once the bot has joined and transcription is on, this panel switches to live agenda tracking.</p>
+
   <script>
-    microsoftTeams.app.initialize().catch(function () {});
-    // If you pass ?src=<https url> Teams will full-panel embed your real live-agenda site.
-    var src = new URLSearchParams(location.search).get("src");
-    if (src) {
-      document.body.innerHTML = '<iframe src="' + src + '"></iframe>';
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme === "default" ? "light" : theme);
+    }
+    function copyEmail() {
+      var t = document.getElementById("botEmail").textContent.trim();
+      navigator.clipboard && navigator.clipboard.writeText(t);
+      var b = document.querySelector("button.copy");
+      if (b) { var o = b.textContent; b.textContent = "Copied!"; setTimeout(function(){ b.textContent = o; }, 1500); }
+    }
+    if (window.microsoftTeams) {
+      microsoftTeams.app.initialize().then(function () {
+        return microsoftTeams.app.getContext();
+      }).then(function (ctx) {
+        applyTheme((ctx && ctx.app && ctx.app.theme) || "default");
+        microsoftTeams.app.registerOnThemeChangeHandler(applyTheme);
+      }).catch(function () { /* not in Teams — keep light theme */ });
     }
   </script>
 </body>
