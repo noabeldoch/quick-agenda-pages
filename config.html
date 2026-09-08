@@ -12,37 +12,54 @@
     body { margin:0; padding:14px; font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--fg); font-size:14px; line-height:1.45; }
     .title { margin:0 0 6px; font-size:16px; font-weight:600; }
     p { margin:0 0 10px; }
-    .muted { color:var(--muted); font-size:12.5px; }
-    .email-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:8px 0; }
-    code.email { background:var(--code-bg); padding:4px 8px; border-radius:6px; font-size:13px; word-break:break-all; }
-    button.copy { border:1px solid var(--border); background:transparent; color:var(--accent); border-radius:6px; padding:3px 9px; font-size:12px; cursor:pointer; }
-    button.copy:hover { background:var(--card); }
+    label { display:block; font-weight:600; margin:12px 0 4px; }
+    input { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--fg); font-size:14px; }
+    .muted { color:var(--muted); font-size:12px; margin-top:6px; }
+    .hint-id { font-family:ui-monospace,monospace; background:var(--code-bg); padding:1px 5px; border-radius:4px; cursor:pointer; }
   </style>
 </head>
 <body>
   <h2 class="title">📋 Quick Agenda</h2>
-  <p>Invite our bot and start live transcription — the agenda then tracks live here for everyone.</p>
-  <div class="email-row">
-    <code class="email" id="botEmail">hack-g4-bot@meetings.quick.aws.dev</code>
-    <button class="copy" onclick="copyEmail()">Copy</button>
-  </div>
-  <p class="muted">Then: <b>More (…) → Record and transcribe → Start transcription</b>. Click <b>Save</b> to add.</p>
+  <p>Enter the meeting's agenda ID so this panel shows the live agenda for this meeting. Leave blank to show the demo.</p>
+
+  <label for="mid">Agenda meeting ID</label>
+  <input id="mid" type="text" placeholder="e.g. 317161927389394" autocomplete="off" />
+  <p class="muted" id="detected"></p>
+  <p class="muted">Then click <b>Save</b>. Invite <b>hack-g4-bot@meetings.quick.aws.dev</b> and start live transcription so the agenda updates.</p>
 
   <script>
-    var CONTENT_URL = "https://djhog3mmjjbr1.cloudfront.net/live/";
+    var BASE = "https://djhog3mmjjbr1.cloudfront.net/live/";
+    var midEl = document.getElementById("mid");
+    var detectedEl = document.getElementById("detected");
+
     function applyTheme(t){ document.documentElement.setAttribute("data-theme", t === "default" ? "light" : t); }
-    function copyEmail(){
-      var t = document.getElementById("botEmail").textContent.trim();
-      navigator.clipboard && navigator.clipboard.writeText(t);
-      var b = document.querySelector("button.copy"); if(b){ var o=b.textContent; b.textContent="Copied!"; setTimeout(function(){ b.textContent=o; },1500); }
+
+    // Build the content URL: per-meeting ?src when an id is given, else the demo base.
+    function buildContentUrl() {
+      var id = (midEl.value || "").trim();
+      if (!id) return BASE;
+      return BASE + "?src=/live/" + encodeURIComponent(id) + ".json";
     }
+
     if (window.microsoftTeams) {
       microsoftTeams.app.initialize().then(function () {
-        microsoftTeams.app.getContext().then(function (c){ applyTheme((c&&c.app&&c.app.theme)||"default"); }).catch(function(){});
+        microsoftTeams.app.getContext().then(function (ctx) {
+          applyTheme((ctx && ctx.app && ctx.app.theme) || "default");
+          // Best-effort prefill from the Teams meeting id (NOTE: may differ from the
+          // summarizer's meetingId — overwrite this field with the summarizer id if so).
+          var tid = (ctx && ctx.meeting && ctx.meeting.id) || (ctx && ctx.chat && ctx.chat.id) || "";
+          if (tid) {
+            detectedEl.innerHTML = 'Teams meeting id: <span class="hint-id" title="click to use" onclick="document.getElementById(\'mid\').value=this.textContent">' + tid + '</span>';
+          }
+        }).catch(function(){});
         microsoftTeams.app.registerOnThemeChangeHandler(applyTheme);
+
         microsoftTeams.pages.config.registerOnSaveHandler(function (e) {
           microsoftTeams.pages.config.setConfig({
-            entityId: "quickAgenda", contentUrl: CONTENT_URL, websiteUrl: CONTENT_URL, suggestedDisplayName: "Quick Agenda"
+            entityId: "quickAgenda",
+            contentUrl: buildContentUrl(),
+            websiteUrl: buildContentUrl(),
+            suggestedDisplayName: "Quick Agenda"
           }).then(function(){ e.notifySuccess(); }).catch(function(err){ e.notifyFailure(String(err)); });
         });
         microsoftTeams.pages.config.setValidityState(true);
