@@ -4,31 +4,36 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quick Agenda — Configure</title>
-  <script src="https://unpkg.com/@microsoft/teams-js@2/dist/MicrosoftTeams.min.js"></script>
+  <script src="https://res.cdn.office.net/teams-js/2.24.0/js/MicrosoftTeams.min.js"></script>
 </head>
 <body style="font-family: 'Segoe UI', sans-serif; padding: 16px;">
   <h3>Quick Agenda</h3>
   <p>Live agenda for this meeting. Click <b>Save</b> to pin it to the side panel.</p>
+  <p id="status" style="color:#666;font-size:12px;">Initializing…</p>
   <script>
-    // content.html hosted next to this file. Swap for your real agenda site if you prefer
-    // (that domain must also be in the manifest's validDomains).
+    var statusEl = document.getElementById("status");
     var CONTENT_URL = location.origin + location.pathname.replace(/config\.html$/, "content.html");
 
-    microsoftTeams.app.initialize().then(function () {
-      microsoftTeams.pages.config.registerOnSaveHandler(function (saveEvent) {
-        microsoftTeams.pages.config.setConfig({
-          entityId: "quickAgenda",
-          contentUrl: CONTENT_URL,
-          websiteUrl: CONTENT_URL,
-          suggestedDisplayName: "Quick Agenda"
-        }).then(function () { saveEvent.notifySuccess(); })
-          .catch(function (e) { saveEvent.notifyFailure(String(e)); });
+    if (!window.microsoftTeams) {
+      statusEl.textContent = "ERROR: Teams SDK failed to load (check network / validDomains).";
+    } else {
+      microsoftTeams.app.initialize().then(function () {
+        microsoftTeams.pages.config.registerOnSaveHandler(function (saveEvent) {
+          microsoftTeams.pages.config.setConfig({
+            entityId: "quickAgenda",
+            contentUrl: CONTENT_URL,
+            websiteUrl: CONTENT_URL,
+            suggestedDisplayName: "Quick Agenda"
+          }).then(function () { saveEvent.notifySuccess(); })
+            .catch(function (e) { saveEvent.notifyFailure(String(e)); });
+        });
+        // Enables the Save button:
+        microsoftTeams.pages.config.setValidityState(true);
+        statusEl.textContent = "Ready — click Save.";
+      }).catch(function (e) {
+        statusEl.textContent = "ERROR during initialize(): " + e;
       });
-      // THIS line is what un-greys the Save button:
-      microsoftTeams.pages.config.setValidityState(true);
-    }).catch(function (e) {
-      document.body.insertAdjacentHTML("beforeend", "<pre>init error: " + e + "</pre>");
-    });
+    }
   </script>
 </body>
 </html>
